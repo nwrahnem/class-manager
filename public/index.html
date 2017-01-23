@@ -1,0 +1,40 @@
+<html>
+<head>
+    <title>Class Database</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-route.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-resource.js"></script>
+    <script src="javascripts/chirpApp.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"></link>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="stylesheets/style.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
+</head>
+<body ng-app="chirpApp">
+<div id='main' class="container">
+    <nav class="navbar-fluid navbar-default navbar-fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#/"> Logo </a>
+			<ul class="nav navbar-nav" bs-active-link>
+				<li class="dropdown">
+					<a href="" data-toggle="dropdown" class="dropdown-toggle" ng-show = "authenticated">View <span class="caret"></span></a>
+					<ul class="dropdown-menu">
+						<li><a href="#/clients">Clients</a></li>
+						<li><a href="#/courses">Courses</a></li>
+					</ul>
+				</li>
+			</ul>
+            <p class="navbar-right navbar-text" ng-hide="authenticated"><a href="#/login">Login</a> or <a href="#/signup">Register</a></p>
+            <p class="navbar-right navbar-text" ng-show="authenticated"><a href="#" ng-click="signout()">Logout</a></p>
+            <p class="navbar-right navbar-text" ng-show="authenticated">Signed in as {{current_user}}</p>
+        </div>
+    </nav>
+    <div>
+        <div ng-view>
+        </div>
+    </div>
+</div>
+</body>
+</html>

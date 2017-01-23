@@ -1,0 +1,51 @@
+<div id="courseDatabase" ng-show="authenticated" class = "clearfix">
+	<div>
+		<span id="upload-file">
+			<label for="file" class="custom-button">
+				Upload
+				<i class = "fa fa-upload"></i>
+			</label>
+			<input ng-model="uploadDownloads" type="file" id="file" fd-input file-name="fileName" file-up-fn="addCourse()"/>
+		</span>
+		<label class = "custom-button">
+			Add Course
+			<i class = "fa fa-user"></i>
+			<button id = "add-button" type="button" data-toggle="modal" data-target="#addModal"></button>
+		</label>		
+	</div>
+	<div class="badge badge-important">{{fileName}}</div>
+
+	<table id = database class = "table table-striped tr-hover small-font">
+		<thead>
+			<tr>
+				<th>Course ID</th>
+				<th>Start Date</th>
+				<th>Duration</th>
+				<th>End Date</th>
+				<th>Course Name</th>
+				<th>Day of Week</th>
+				<th>Start Time</th>
+				<th>Instructor</th>
+				<th>Active</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+		<tr ng-repeat="x in courses" ng-click="openDialog(x)" >
+			<td>{{x.courseID}}</td>
+			<td>{{x.startDate}}</td>
+			<td>{{x.duration}}</td>
+			<td>{{x.endDate}}</td>
+			<td>{{x.courseName}}</td>
+			<td>{{x.weekDay}}</td>
+			<td>{{x.time}}</td>
+			<td>{{x.instructor}}</td>
+			<td>{{x.active}}</td>
+			<td>
+				<button class="btn btn-xs btn-info"><i class="fa fa-user-plus"></i>Add Clients</button>
+				<button ng-click = "removeCourse(x)" class="btn btn-xs btn-danger"><i class="fa fa-trash-o"></i>Delete</button>
+			</td>
+		</tr>
+		</tbody>
+	</table>
+</div>
