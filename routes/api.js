@@ -105,6 +105,7 @@ router.use('/courses/', isAuthenticated);
 router.route('/courses')
 	//creates a new course
     .post(function(req, res){
+		console.log(req.body);
         var course = new Course();
 		course.userID = req.body.userID;
         course.courseID = req.body.courseID;

@@ -5,12 +5,12 @@
 				Upload
 				<i class = "fa fa-upload"></i>
 			</label>
-			<input ng-model="uploadDownloads" type="file" id="file" fd-input file-name="fileName" file-up-fn="addCourse()"/>
+			<input ng-model="uploadDownloads" type="file" id="file" fd-input file-name="fileName" file-up-fn="addCourses()"/>
 		</span>
 		<label class = "custom-button">
 			Add Course
 			<i class = "fa fa-user"></i>
-			<button id = "add-button" type="button" data-toggle="modal" data-target="#addModal"></button>
+			<button id = "add-button" type="button" data-toggle="modal" data-target="#courseModal"></button>
 		</label>		
 	</div>
 	<div class="badge badge-important">{{fileName}}</div>
@@ -42,10 +42,68 @@
 			<td>{{x.instructor}}</td>
 			<td>{{x.active}}</td>
 			<td>
-				<button class="btn btn-xs btn-info"><i class="fa fa-user-plus"></i>Add Clients</button>
+				<!--TODO <button class="btn btn-xs btn-info"><i class="fa fa-user-plus"></i>Add Courses</button>-->
 				<button ng-click = "removeCourse(x)" class="btn btn-xs btn-danger"><i class="fa fa-trash-o"></i>Delete</button>
 			</td>
 		</tr>
 		</tbody>
 	</table>
+</div>
+
+<!-- Add Modal -->
+<div id="courseModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+		<!-- Modal content-->
+	  <div class="modal-content">
+		<div class="modal-header">
+		  <button type="button" class="close" data-dismiss="modal">&times;</button>
+		  <h4 style="color:red;"><span class="fa fa-user"></span> Add a Course</h4>
+		</div>
+		<div class="modal-body">
+		  <form role="form">
+			<div class="form-group">
+			  <label for="courseid">Course ID (Leave blank to auto-create)</label>
+			  <input type="text" class="form-control" id="courseid" placeholder="Enter course ID" ng-model="tcourse.courseID">
+			</div>
+			<div class="form-group">
+			  <label for="startdate">Start Date</label>
+			  <input type="text" class="form-control" id="startdate" placeholder="Enter start date" ng-model="tcourse.startDate">
+			</div>
+			<div class="form-group">
+			  <label for="duration">Duration</label>
+			  <input type="text" class="form-control" id="duration" placeholder="Enter duration" ng-model="tcourse.duration">
+			</div>
+			<div class="form-group">
+			  <label for="enddate">End Date</label>
+			  <input type="text" class="form-control" id="enddate" placeholder="Enter end date" ng-model="tcourse.endDate">
+			</div>
+			<div class="form-group">
+			  <label for="coursename">Course Name</label>
+			  <input type="text" class="form-control" id="coursename" placeholder="Enter course name" ng-model="tcourse.courseName">
+			</div>
+			<div class="form-group">
+			  <label for="dayofweek">Day of Week</label>
+			  <input type="text" class="form-control" id="dayofweek" placeholder="Enter day of week" ng-model="tcourse.weekDay">
+			</div>
+			<div class="form-group">
+			  <label for="starttime">Start Time</label>
+			  <input type="text" class="form-control" id="starttime" placeholder="Enter start time" ng-model="tcourse.time">
+			</div>
+			<div class="form-group">
+			  <label for="instructor">Instructor</label>
+			  <input type="text" class="form-control" id="instructor" placeholder="Enter instructor" ng-model="tcourse.instructor">
+			</div>
+			<div class="form-group">
+			  <label for="active">Active</label>
+			  <input type="text" class="form-control" id="active" placeholder="Enter active or not" ng-model="tcourse.active">
+			</div>
+			<button ng-click = "addCourse()" type="submit" class="btn btn-default btn-primary btn-block" data-dismiss="modal">Add to Database</button>
+		  </form>
+		  <span class = "pull-left">{{add_error_message}}</span>
+		</div>
+		<div class="modal-footer">
+		</div>
+	  </div>
+  </div>
 </div>
