@@ -85,6 +85,9 @@ app.config(function($routeProvider){
 		.when('/calendar', {
 			templateUrl: 'calendar.html',
             controller: 'calendarController'
+		})
+		.otherwise({
+			redirectTo: '/'
 		});
 });
 
