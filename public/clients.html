@@ -60,7 +60,7 @@
                         <div class="form-group" ng-class="{'has-error': userForm.email.$touched && userForm.email.$invalid}">
                             <label>Email</label>
                             <input type="text" name="email" class="form-control" ng-model="tclient.email" ng-model-options="{ debounce: 50 }" email-valid>
-                            <i><p ng-if="userForm.email.$error.emailValid">Not a valid email</p></i>
+                            <i><p ng-if="userForm.email.$error.emailValid && userForm.email.$touched">Not a valid email</p></i>
                         </div>
 
                         <!-- CELL PHONE -->
