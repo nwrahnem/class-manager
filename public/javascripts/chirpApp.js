@@ -178,11 +178,11 @@ app.controller('mainController', function(clientService, courseService, clientFi
         if(arg.client.clientID==''){
             //find smallest unused clientID and set clientID to it
             clientService.query({userid:$rootScope.current_user, sortby:"clientID"}, function(data){
-                while(i<data.length && i==data[i].clientID){
+                while (i < data.length && i == data[i].clientID) {
                     i++;
                 }
-                arg.client.clientID=i;
-                i=0;
+                arg.client.clientID = i;
+                i = 0;
 
                 clientFieldService.save(arg.client, function(){
                     clientService.query({userid:$rootScope.current_user, sortby:$scope.sortBy}, function(data2){
@@ -190,6 +190,12 @@ app.controller('mainController', function(clientService, courseService, clientFi
                     });
                 })
             });
+        }else{
+            clientFieldService.save(arg.client, function(){
+                clientService.query({userid:$rootScope.current_user, sortby:$scope.sortBy}, function(data2){
+                    $scope.clients = data2;
+                });
+            })
         }
     });
 
@@ -221,7 +227,7 @@ app.controller('mainController', function(clientService, courseService, clientFi
 						cellPhone: line[4],	
 						homePhone: line[5]
 					};
-					clientService.save($scope.newClient, function(){
+					clientFieldService.save($scope.newClient, function(){
                         clientService.query({userid:$rootScope.current_user, sortby:$scope.sortBy}, function(data){
                             $scope.clients = data;
                         });
