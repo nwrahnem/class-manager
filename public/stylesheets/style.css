@@ -39,7 +39,7 @@ a {
 	overflow: auto
 }
 
-input[type="file"],button[id="add-button"]{
+input[type="file"],button[id="add-button"],[id="sortby"]{
     position: absolute;
     width: 1px;
     height: 1px;
@@ -51,8 +51,30 @@ input[type="file"],button[id="add-button"]{
 }
 
 .custom-button {
-    border: 1px solid #ccc;
     display: inline-block;
     padding: 6px 12px;
     cursor: pointer;
+    background-color: #00aced;
+    color: #ffffff;
+    border-radius: 5px;
+}
+
+
+.nav, .pagination, .carousel, .panel-title, .pointer a { cursor: pointer; }
+
+.panel-heading {
+    padding: 0;
+}
+
+.panel-title a {
+	display: block;
+	padding: 10px 15px;
+}
+
+br {
+    line-height: 5px;
+}
+
+.glyphicon {
+    font-size: 20px;
 }

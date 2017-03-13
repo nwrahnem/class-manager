@@ -7,85 +7,174 @@
 		</label>
 		<input ng-model="uploadDownloads" type="file" id="file" fd-input file-name="fileName" file-up-fn="addClients()"/>
 		</span>
-		<label class = "custom-button">
-			Add Client
-			<i class = "fa fa-user"></i>
-			<button id = "add-button" type="button" data-toggle="modal" data-target="#addModal"></button>
-		</label>
+
+
+        <span class="btn-group" uib-dropdown is-open="status.isopen">
+            <label class = "custom-button">
+				Sort By
+				<button id = "sortby" type="button" uib-dropdown-toggle></button>
+                <span class="caret"></span>
+			</label>
+            <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
+                <li role="menuitem" class = "pointer"><a ng-click="sort('firstName')">First Name</a></li>
+                <li role="menuitem" class = "pointer"><a ng-click="sort('lastName')">Last Name</a></li>
+                <li role="menuitem" class = "pointer"><a ng-click="sort('clientID')">Client ID</a></li>
+            </ul>
+        </span>
+
+		<!--Add Button modal-->
+		<span ng-controller="modalController" class="modal-demo">
+			<script type="text/ng-template" id="addClients.html">
+				<div class="modal-header">
+					<h3 class="modal-title" id="modal-title">Add a Client</h3>
+				</div>
+                <form name="userForm" ng-submit="submitForm()" novalidate>
+                    <div class="modal-body">
+                        <!-- CLIENT ID -->
+                        <div class="form-group" ng-class="{'has-error': userForm.clientID.$touched && userForm.clientID.$invalid}">
+                            <label>Client ID <i>(Leave blank to autocreate)</i></label>
+                            <input type="text" name="clientID" class="form-control" ng-model="tclient.clientID" number/>
+                            <div ng-messages="userForm.clientID.$error" ng-if="userForm.clientID.$touched">
+                                <i><p ng-message="number">Client ID must be a number</p></i>
+                            </div>
+                        </div>
+                        <!-- FIRST NAME -->
+                        <div class="form-group" ng-class="{'has-error': userForm.firstName.$touched && userForm.firstName.$invalid}">
+                            <label>First Name</label>
+                            <input type="text" name="firstName" class="form-control" ng-model="tclient.firstName" required/>
+                            <div ng-messages="userForm.firstName.$error" ng-if="userForm.firstName.$touched">
+                                <i><p ng-message="required">First name is required</p></i>
+                            </div>
+                        </div>
+
+                        <!-- LAST NAME -->
+                        <div class="form-group" ng-class="{'has-error': userForm.lastName.$touched && userForm.lastName.$invalid}">
+                            <label>Last Name</label>
+                            <input type="text" name="lastName" class="form-control" ng-model="tclient.lastName" required/>
+                            <div ng-messages="userForm.lastName.$error" ng-if="userForm.lastName.$touched">
+                                <i><p ng-message="required">Last name is required</p></i>
+                            </div>
+                        </div>
+
+                        <!-- EMAIL -->
+                        <div class="form-group" ng-class="{'has-error': userForm.email.$touched && userForm.email.$invalid}">
+                            <label>Email</label>
+                            <input type="text" name="email" class="form-control" ng-model="tclient.email" ng-model-options="{ debounce: 50 }" email-valid>
+                            <i><p ng-if="userForm.email.$error.emailValid">Not a valid email</p></i>
+                        </div>
+
+                        <!-- CELL PHONE -->
+                        <div class="form-group" ng-class="{'has-error': userForm.cellPhone.$touched && userForm.cellPhone.$invalid}">
+                            <label>Cell Phone</label>
+                            <input type="tel" name="cellPhone" class="form-control" ng-model="tclient.cellPhone" ng-model-options="{ debounce: 50 }" phone>
+                            <div ng-messages="userForm.cellPhone.$error" ng-if="userForm.cellPhone.$touched">
+                                <i><p ng-message="phone">Not a valid phone number</p></i>
+                            </div>
+                        </div>
+
+                        <!-- HOME PHONE -->
+                        <div class="form-group" ng-class="{'has-error': userForm.homePhone.$touched && userForm.homePhone.$invalid}">
+                            <label>Home Phone</label>
+                            <input type="tel" name="homePhone" class="form-control" ng-model="tclient.homePhone" ng-model-options="{ debounce: 50 }" phone>
+                            <div ng-messages="userForm.homePhone.$error" ng-if="userForm.homePhone.$touched">
+                                <i><p ng-message="phone">Not a valid phone number</p></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" ng-disabled="userForm.$invalid || userForm.$pending">Add</button>
+                        <button type="button" class="btn btn-warning" ng-click="cancel()">Cancel</button>
+                    </div>
+                </form>
+			</script>
+			<label class = "custom-button">
+				Add Client
+				<i class = "fa fa-user"></i>
+				<button id = "add-button" type="button" ng-click="open()"></button>
+			</label>
+			<div class="modal-parent">
+			</div>
+		</span>
+
+
 	</div>
 	
 	<div class="badge badge-important" ng-show = "file_chosen">{{fileName}}</div>
-	<table id = database class = "table table-striped tr-hover small-font">
-		<thead>
-			<th>Client ID (number)</th>
-			<th>Last Name</th>
-			<th>First Name</th>
-			<th>Email</th>
-			<th>Cell Phone</th>
-			<th>Home Phone</th>
-			<th>Actions</th>
-		</thead>
-		<tbody>
-		<tr ng-repeat="x in clients">
-			<td>{{x.clientID}}</td>
-			<td>{{x.lastName}}</td>
-			<td>{{x.firstName}}</td>
-			<td>{{x.email}}</td>
-			<td>{{x.cellPhone}}</td>
-			<td>{{x.homePhone}}</td>
-			<td>
-				<!-- TODO EDIT
-				<button ng-click = "editClient(x)" class="btn btn-xs btn-success"><i class="fa fa-edit"></i>Edit</button>
-				-->
-				<button ng-click = "removeClient(x)" class="btn btn-xs btn-danger"><i class="fa fa-trash-o"></i>Delete</button>
-			</td>
-		</tr>
-		</tbody>
-	</table>
-</div>
 
-<!-- Add Modal -->
-<div id="addModal" class="modal fade" role="dialog">
-  <div class="modal-dialog">
+	<div>
+		<uib-accordion>
+			<div uib-accordion-group class="panel-default" heading="{{client.firstName}} {{client.lastName}}" ng-repeat = "client in clients">	
+				<div>Client ID: {{client.clientID}}</div>
+				<div>Email: {{client.email}}</div>
+				<div>Cell Phone: {{client.cellPhone}}</div>
+				<div>Home Phone: {{client.homePhone}}</div>
+				<br>
+				<button ng-click = "removeClient(client)" class="btn btn-xs btn-danger"><i class="fa fa-trash-o"></i>Delete</button>
 
-		<!-- Modal content-->
-	  <div class="modal-content">
-		<div class="modal-header">
-		  <button type="button" class="close" data-dismiss="modal">&times;</button>
-		  <h4 style="color:red;"><span class="fa fa-user"></span> Add a Client</h4>
-		</div>
-		<div class="modal-body">
-		  <form role="form">
-			<div class="form-group">
-			  <label for="clientid">Client ID (Leave blank to auto-create)</label>
-			  <input type="text" class="form-control" id="clientid" placeholder="Enter client ID" ng-model="tclient.clientID">
+                <!--Edit Button modal-->
+                <span ng-controller="modalController" class="edit-modal">
+                    <script type="text/ng-template" id="editClients.html">
+                        <div class="modal-header">
+                            <h3 class="modal-title" id="edit-modal-title">Edit a Client</h3>
+                        </div>
+                        <form name="userForm" ng-submit="submitForm()" novalidate>
+                            <div class="modal-body">
+                                <!-- FIRST NAME -->
+                                <div class="form-group" ng-class="{'has-error': userForm.firstName.$touched && userForm.firstName.$invalid}">
+                                    <label>First Name</label>
+                                    <input type="text" name="firstName" class="form-control" ng-model="tclient.firstName" value = {{client.firstName}} required/>
+                                    <div ng-messages="userForm.firstName.$error" ng-if="userForm.firstName.$touched">
+                                        <i><p ng-message="required">First name is required</p></i>
+                                    </div>
+                                </div>
+
+                                <!-- LAST NAME -->
+                                <div class="form-group" ng-class="{'has-error': userForm.lastName.$touched && userForm.lastName.$invalid}">
+                                    <label>Last Name</label>
+                                    <input type="text" name="lastName" class="form-control" ng-model="tclient.lastName" required/>
+                                    <div ng-messages="userForm.lastName.$error" ng-if="userForm.lastName.$touched">
+                                        <i><p ng-message="required">Last name is required</p></i>
+                                    </div>
+                                </div>
+
+                                <!-- EMAIL -->
+                                <div class="form-group" ng-class="{'has-error': userForm.email.$touched && userForm.email.$invalid}">
+                                    <label>Email</label>
+                                    <input type="text" name="email" class="form-control" ng-model="tclient.email" ng-model-options="{ debounce: 50 }" email-valid>
+                                    <i><p ng-if="userForm.email.$error.emailValid">Not a valid email</p></i>
+                                </div>
+
+                                <!-- CELL PHONE -->
+                                <div class="form-group" ng-class="{'has-error': userForm.cellPhone.$touched && userForm.cellPhone.$invalid}">
+                                    <label>Cell Phone</label>
+                                    <input type="tel" name="cellPhone" class="form-control" ng-model="tclient.cellPhone" ng-model-options="{ debounce: 50 }" phone>
+                                    <div ng-messages="userForm.cellPhone.$error" ng-if="userForm.cellPhone.$touched">
+                                        <i><p ng-message="phone">Not a valid phone number</p></i>
+                                    </div>
+                                </div>
+
+                                <!-- HOME PHONE -->
+                                <div class="form-group" ng-class="{'has-error': userForm.homePhone.$touched && userForm.homePhone.$invalid}">
+                                    <label>Home Phone</label>
+                                    <input type="tel" name="homePhone" class="form-control" ng-model="tclient.homePhone" ng-model-options="{ debounce: 50 }" phone>
+                                    <div ng-messages="userForm.homePhone.$error" ng-if="userForm.homePhone.$touched">
+                                        <i><p ng-message="phone">Not a valid phone number</p></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary" ng-disabled="userForm.$invalid || userForm.$pending">Save</button>
+                                <button type="button" class="btn btn-warning" ng-click="cancel()">Cancel</button>
+                            </div>
+                        </form>
+                    </script>
+                    <button ng-click = "editClient(client)" class="btn btn-xs btn-success"><i class="fa fa-edit"></i>Edit</button>
+                    <div class="modal-parent">
+                    </div>
+                </span>
+
+
 			</div>
-			<div class="form-group">
-			  <label for="firstname">First Name</label>
-			  <input type="text" class="form-control" id="firstname" placeholder="Enter first name" ng-model="tclient.firstName">
-			</div>
-			<div class="form-group">
-			  <label for="lastname">Last Name</label>
-			  <input type="text" class="form-control" id="lastname" placeholder="Enter last name" ng-model="tclient.lastName">
-			</div>
-			<div class="form-group">
-			  <label for="email">Email</label>
-			  <input type="text" class="form-control" id="email" placeholder="Enter email" ng-model="tclient.email">
-			</div>
-			<div class="form-group">
-			  <label for="cellphone">Cell Phone</label>
-			  <input type="text" class="form-control" id="cellphone" placeholder="Enter cell phone" ng-model="tclient.cellPhone">
-			</div>
-			<div class="form-group">
-			  <label for="homephone">Home Phone</label>
-			  <input type="text" class="form-control" id="homephone" placeholder="Enter home phone" ng-model="tclient.homePhone">
-			</div>
-			<button ng-click = "addClient()" type="submit" class="btn btn-default btn-primary btn-block" data-dismiss="modal">Add to Database</button>
-		  </form>
-		  <span class = "pull-left">{{add_error_message}}</span>
-		</div>
-		<div class="modal-footer">
-		</div>
-	  </div>
-  </div>
+		</uib-accordion>
+	</div>
 </div>

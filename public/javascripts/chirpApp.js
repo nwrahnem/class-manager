@@ -1,4 +1,4 @@
-var app = angular.module('chirpApp', ['ngRoute', 'ngResource', 'ui.calendar', 'ui.bootstrap']).run(function($rootScope, $http) {
+var app = angular.module('chirpApp', ['ngRoute', 'ngResource', 'ngSanitize', 'ngAnimate', 'ngMessages', 'ui.calendar', 'ui.bootstrap']).run(function($rootScope, $http) {
     $rootScope.authenticated = false;
     $rootScope.current_user = '';
 	$rootScope.file_chosen = false;
@@ -10,9 +10,56 @@ var app = angular.module('chirpApp', ['ngRoute', 'ngResource', 'ui.calendar', 'u
     };
 });
 
+//Validates if value in ngmodel is a number or empty
+app.directive('number', function(){
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: function($scope, $element, $attrs, ngModel){
+            ngModel.$validators.number = function(modelValue) {
+                return !isNaN(modelValue) || modelValue === undefined;
+            }
+        }
+    };
+});
+
+//Validates if value in ngmodel is a valid email
+app.directive('emailValid', function($http, $q){
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: function($scope, $element, $attrs, ngModel){
+            ngModel.$asyncValidators.emailValid = function(modelValue) {
+            	return $http.post('/api/validation/email', {email: modelValue}).then(
+                	function (response) {
+                	    if(!response.data){
+                            return $q.reject(response.data);
+                        }
+                 	    return true;
+                	}
+				);
+            };
+        }
+    };
+});
+
+//Validates if value in ngmodel is a valid phone number (or empty)
+app.directive('phone', function(){
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: function($scope, $element, $attrs, ngModel){
+            ngModel.$validators.phone = function(modelValue) {
+                var phoneNum = new RegExp("^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4}$");
+                return phoneNum.test(modelValue) || modelValue == "" || modelValue === undefined;
+            }
+        }
+    };
+});
+
 app.directive('bsActiveLink', ['$location', function ($location) {
 return {
-    restrict: 'A', //use as attribute 
+    restrict: 'A',
     link: function (scope, elem) {
         //after the route has changed
         scope.$on("$routeChangeSuccess", function () {
@@ -25,7 +72,7 @@ return {
                     a.parent().addClass('active');
                 } else {
                     a.parent().removeClass('active');   
-                };
+                }
             });     
         });
     }
@@ -39,7 +86,7 @@ return {
         fileName: '=',
 		fileUpFn: '&'
       },
-      link: function(scope, elem, attrs) {
+      link: function(scope, elem) {
         elem.on('change', function(evt) {
 			scope.fileUpFn();
 			var files = evt.target.files;
@@ -91,43 +138,30 @@ app.config(function($routeProvider){
 		});
 });
 
-app.factory('clientService', function($resource){
+app.factory('clientFieldService', function($resource){
     return $resource('/api/clients/:userid/:field');
+});
+
+app.factory('clientUpdateService', function($resource){
+    return $resource('/api/clients/update');
+});
+
+app.factory('clientService', function($resource){
+    return $resource('/api/clients/:userid/sortby/:sortby');
 });
 
 app.factory('courseService', function($resource){
     return $resource('/api/courses/:userid');
 });
 
-app.controller('mainController', function(clientService, courseService, $scope, $rootScope){
+app.controller('mainController', function(clientService, courseService, clientFieldService, clientUpdateService, $scope, $rootScope){
 	$scope.fileName = '';
 	$scope.add_error_message = '';
-	$scope.tclient={
-		userID: $rootScope.current_user,
-		clientID:'',
-		firstName:'',
-		lastName:'',
-		email:'',
-		cellPhone:'',
-		homePhone:''
-	}
-	$scope.tcourse={
-		userID: $rootScope.current_user,
-		courseID:'',
-		startDate:'',
-		duration:'',
-		endDate:'',
-		courseName:'',
-		weekDay:'',
-		time:'',
-		instructor:'',
-		active:''
-	}
-	
+	$scope.sortBy = "firstName";
 	
 	//--------Client and Course data initializations--------
 	
-	clientService.query({userid:$rootScope.current_user}, function(data){
+	clientService.query({userid:$rootScope.current_user, sortby:$scope.sortBy}, function(data){
 		$scope.clients = data;
 	});
 	courseService.query({userid:$rootScope.current_user}, function(data){
@@ -137,27 +171,35 @@ app.controller('mainController', function(clientService, courseService, $scope, 
 	
 	
 	//--------Client Functions--------
-	
-	//Add single client to database
+
+	//Add single client to database from modal
 	var i=0;
-	$scope.addClient = function() {
-		if($scope.tclient.clientID==''){
-			//find smallest unused clientID and set clientID to it
-			sort($scope.clients);
-			while(i<$scope.clients.length && i!=$scope.clients[i]){
-				i++;
-			}
-			
-			$scope.tclient.clientID=i;
-			i=0;
-		}
-			
-        clientService.save($scope.tclient, function(){
-			clientService.query({userid:$rootScope.current_user}, function(data){
-				$scope.clients = data;
-			});
-		})
-    };
+	$scope.$on("clientAdded", function(event,arg){
+        if(arg.client.clientID==''){
+            //find smallest unused clientID and set clientID to it
+            clientService.query({userid:$rootScope.current_user, sortby:"clientID"}, function(data){
+                while(i<data.length && i==data[i].clientID){
+                    i++;
+                }
+                arg.client.clientID=i;
+                i=0;
+
+                clientFieldService.save(arg.client, function(){
+                    clientService.query({userid:$rootScope.current_user, sortby:$scope.sortBy}, function(data2){
+                        $scope.clients = data2;
+                    });
+                })
+            });
+        }
+    });
+
+    $scope.$on("clientEdited", function(event,arg){
+        clientUpdateService.save(arg.client, function(){
+            clientService.query({userid:$rootScope.current_user, sortby:$scope.sortBy}, function(data){
+                $scope.clients = data;
+            });
+        })
+    });
 	
 	//Add multiple clients by upload
 	$scope.addClients = function() {
@@ -178,12 +220,14 @@ app.controller('mainController', function(clientService, courseService, $scope, 
 						email: line[3], 
 						cellPhone: line[4],	
 						homePhone: line[5]
-					}
+					};
 					clientService.save($scope.newClient, function(){
-						$scope.clients = clientService.query({userid:$rootScope.current_user});
+                        clientService.query({userid:$rootScope.current_user, sortby:$scope.sortBy}, function(data){
+                            $scope.clients = data;
+                        });
 					})
 				}
-			}
+			};
 			reader.onerror = errorHandler;
 		}else{
 			alert("Only csv files are accepted");
@@ -192,25 +236,29 @@ app.controller('mainController', function(clientService, courseService, $scope, 
 	
 	//Remove client from database
 	$scope.removeClient = function(client) {
-		clientService.remove({userid:client._id}, function(){
-			clientService.query({userid:$rootScope.current_user}, function(data){
-				$scope.clients = data;
-			});
+		clientFieldService.remove({userid:client._id}, function(){
+            clientService.query({userid:$rootScope.current_user, sortby:$scope.sortBy}, function(data){
+                $scope.clients = data;
+            });
 		})
-	}
-	
+	};
+
+    $scope.sort = function(item){
+        $scope.sortBy = item;
+        clientService.query({userid:$rootScope.current_user, sortby:item}, function(data){
+            $scope.clients = data;
+        });
+    }
 	
 	//--------Course Functions--------
-	//Add single course to database
-	var i=0;
-	$scope.addCourse = function() {
-        courseService.save($scope.tcourse, function(){
-			courseService.query({userid:$rootScope.current_user}, function(data){
-				$scope.courses = data;
-			});
-		})
-    };
-	
+    $scope.$on("courseAdded", function(event,arg){
+        courseService.save(arg.course, function(){
+            courseService.query({userid:$rootScope.current_user}, function(data){
+                $scope.courses = data;
+            });
+        })
+    });
+
 	//Add multiple courses by upload
 	$scope.addCourses = function() {
         var file = document.getElementById('file').files[0];
@@ -232,14 +280,14 @@ app.controller('mainController', function(clientService, courseService, $scope, 
 					time: line[6],
 					instructor: line[7],
 					active: line[8]
-				}
+				};
 				courseService.save($scope.newCourse, function(){
 					courseService.query({userid:$rootScope.current_user}, function(data){
 						$scope.courses = data;
 					});
 				})
 			}
-		}
+		};
 		reader.onerror = errorHandler;
     };
 	
@@ -251,59 +299,13 @@ app.controller('mainController', function(clientService, courseService, $scope, 
 			});
 		})
 	}
-	
-	
-	//--------Clear Modal on close--------//
-	$('#addModal').on('hidden.bs.modal', function (e) {
-		$scope.$apply(function(){
-			$scope.tclient={
-				userID: $rootScope.current_user,
-				clientID:'',
-				firstname:'',
-				lastname:'',
-				email:'',
-				cellphone:'',
-				homephone:''
-			}
-		})
-	})
-	
-	$('#courseModal').on('hidden.bs.modal', function (e) {
-		$scope.$apply(function(){
-			$scope.tcourse={
-				userID:$rootScope.current_user,
-				courseID:'',
-				startDate:'',
-				duration:'',
-				endDate:'',
-				courseName:'',
-				weekDay:'',
-				time:'',
-				instructor:'',
-				active:''
-			}
-		})
-	})
+
 });
 
-function sort(array){
-	array.sort(function(a,b){
-		if (a.clientID < b.clientID) {
-			return -1;
-		}
-		if (a.clientID > b.clientID) {
-			return 1;
-		}
-		return 0;
-	})
-}
 
 function isCsv(file) {
 	var parts = file.name.split('.');
-	if((parts[parts.length - 1]).toLowerCase()=='csv'){
-		return true;
-	}
-	return false;
+	return (parts[parts.length - 1]).toLowerCase()=='csv';
 }
 
 
@@ -356,7 +358,7 @@ app.controller('calendarController', function($scope, $rootScope, $compile, uiCa
     //with this you can handle the events that generated by droping any event to different position in the calendar
      $scope.alertOnDrop = function(event, dayDelta, minuteDelta, allDay, revertFunc, jsEvent, ui, view){
         $scope.$apply(function(){
-          $scope.alertMessage = ('Event Droped to make dayDelta ' + dayDelta);
+          $scope.alertMessage = ('Event Dropped to make dayDelta ' + dayDelta);
         });
     };
      
@@ -367,16 +369,7 @@ app.controller('calendarController', function($scope, $rootScope, $compile, uiCa
           $scope.alertMessage = ('Event Resized to make dayDelta ' + minuteDelta);
         });
     };
-     
-	//add event
-    $scope.addEvent = function() {
-      $scope.events.push({
-        title: 'Open Sesame',
-        start: new Date(y, m, 28),
-        end: new Date(y, m, 29),
-        className: ['openSesame']
-      });
-    };
+
     //remove event
     $scope.remove = function(index) {
       $scope.events.splice(index,1);
@@ -414,7 +407,144 @@ app.controller('calendarController', function($scope, $rootScope, $compile, uiCa
 	
     /* event sources array*/
     $scope.eventSources = [$scope.courses];
+});
 
+
+app.controller('modalController', function($scope, $uibModal, $log, $document){
+	$scope.open = function () {
+		var modalInstance = $uibModal.open({
+			ariaLabelledBy: 'modal-title',
+			ariaDescribedBy: 'modal-body',
+			templateUrl: 'addClients.html',
+			controller: 'ModalInstanceCtrl',
+			resolve: {
+				items: function () {
+					return $scope.items;
+				}
+			}
+		});
+
+		modalInstance.result.then(function (tclient) {
+		    $scope.$emit('clientAdded',{client:tclient});
+		}, function () {
+		    $log.info('Modal dismissed at: ' + new Date());
+		});
+	};
+
+    $scope.editClient = function (client) {
+        $scope.client = client;
+        var modalInstance = $uibModal.open({
+            ariaLabelledBy: 'edit-modal-title',
+            ariaDescribedBy: 'edit-modal-body',
+            templateUrl: 'editClients.html',
+            scope: $scope,
+            controller: 'ModalInstanceCtrl',
+            resolve: {
+                items: function () {
+                    return $scope.items;
+                }
+            }
+        });
+
+        modalInstance.result.then(function (tclient) {
+            $scope.$emit('clientEdited',{client:tclient});
+        }, function () {
+            $log.info('Modal dismissed at: ' + new Date());
+        });
+    };
+
+    $scope.openCourse = function () {
+        var modalInstance = $uibModal.open({
+            ariaLabelledBy: 'modal-title',
+            ariaDescribedBy: 'modal-body',
+            templateUrl: 'addClients.html',
+            controller: 'ModalInstanceCtrl',
+            resolve: {
+                items: function () {
+                    return $scope.items;
+                }
+            }
+        });
+
+        modalInstance.result.then(function (tcourse) {
+            $scope.$emit('courseAdded',{course:tcourse});
+        }, function () {
+            $log.info('Modal dismissed at: ' + new Date());
+        });
+    };
+});
+
+app.controller('ModalInstanceCtrl', function ($rootScope, $scope, $uibModalInstance) {
+    $scope.userForm = {};
+    $scope.tclient={
+        userID: $rootScope.current_user,
+        clientID:'',
+        firstName:'',
+        lastName:'',
+        email:'',
+        cellPhone:'',
+        homePhone:''
+    };
+    $scope.tcourse={
+        userID: $rootScope.current_user,
+        courseID:'',
+        startDate:'',
+        duration:'',
+        endDate:'',
+        courseName:'',
+        weekDay:'',
+        time:'',
+        instructor:'',
+        active:''
+    };
+    if($scope.client)
+    $scope.tclient = $scope.client;
+
+    $scope.submitForm = function () {
+        if ($scope.userForm.$valid) {
+            $uibModalInstance.close($scope.tclient);
+        } else {
+            alert("Invalid input");
+        }
+    };
+
+    $scope.submitForm2 = function () {
+        if ($scope.userForm.$valid) {
+            $uibModalInstance.close($scope.tcourse);
+        } else {
+            alert("Invalid input");
+        }
+    };
+
+    $scope.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+
+    $scope.dateOptions = {
+        formatYear: 'yy',
+        maxDate: new Date(2020, 5, 22),
+        startingDay: 1
+    };
+
+    $scope.openDatePicker = function() {
+        $scope.popup1.opened = true;
+    };
+
+    $scope.openDatePicker2 = function() {
+        $scope.popup2.opened = true;
+    };
+
+    $scope.formats = ['dd-MMMM-yyyy', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
+    $scope.format = $scope.formats[0];
+    $scope.altInputFormats = ['M!/d!/yyyy'];
+
+    $scope.popup1 = {
+        opened: false
+    };
+
+    $scope.popup2 = {
+        opened: false
+    };
 });
 
 app.controller('authController', function($scope, $http, $rootScope, $location){
